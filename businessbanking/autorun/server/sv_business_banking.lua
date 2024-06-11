@@ -40,7 +40,7 @@ net.Receive("BUSINESS_BANKING_DEPOSIT", function(len, ply)
     end
 end)
 
-timer.Create("BUSINESS_BANKING_INTEREST", 60,0, function()
+timer.Create("BUSINESS_BANKING_INTEREST", BUSINESS_BANKING.InterestTimer ,0, function()
     for _, ply in ipairs(player.GetAll()) do
         local playersBalance = ply:GetPData("BUSINESS_BANKING_BALANCE", 0)
         ply:SetPData("BUSINESS_BANKING_BALANCE", playersBalance + (playersBalance * BUSINESS_BANKING["InterestRate"]))
