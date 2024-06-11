@@ -39,3 +39,13 @@ net.Receive("BUSINESS_BANKING_DEPOSIT", function(len, ply)
         ply:ChatPrint("You do not have enough money to deposit that amount.")
     end
 end)
+
+timer.Create("BUSINESS_BANKING_INTEREST", 60,0, function()
+    for _, ply in ipairs(player.GetAll()) do
+        local playersBalance = ply:GetPData("BUSINESS_BANKING_BALANCE", 0)
+        ply:SetPData("BUSINESS_BANKING_BALANCE", playersBalance + (playersBalance * BUSINESS_BANKING["InterestRate"]))
+        ply:ChatPrint("You have received interest on your bank balance.")
+    end
+
+
+end)
