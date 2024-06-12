@@ -1,6 +1,6 @@
 function BUSINESS_BANKING:OpenMenu()
     local frame = vgui.Create("DFrame")
-    frame:SetSize(100, 200)
+    frame:SetSize(300, 200)
     frame:Center()
     frame:SetTitle("Banking")
     frame:MakePopup()
@@ -12,7 +12,7 @@ function BUSINESS_BANKING:OpenMenu()
     local balance = vgui.Create("DLabel", frame)
     net.Receive("BUSINESS_BANKING_SEND_BALANCE", function()
         local playerBalance = net.ReadInt(32)
-        balance:SetText("Balance: " .. playerBalance)
+        balance:SetText("Balance: " .. playerBalance .. "$")
         balance:SizeToContents()
         balance:SetPos(frame:GetWide() / 2 - balance:GetWide() / 2 - balance:GetTall() / 2, 50)
         
@@ -21,7 +21,7 @@ function BUSINESS_BANKING:OpenMenu()
     --Replaced the basic button with a better looking one because it looks better--
     local close = vgui.Create("DButton", frame)
     close:SetSize(20, 20)
-    close:SetPos(80, 0)
+    close:SetPos(280, 0)
     close:SetText("X")
     close:SetTextColor(Color(255, 255, 255))
     close.Paint = function(self, w, h)
@@ -32,7 +32,7 @@ function BUSINESS_BANKING:OpenMenu()
     end
     -------------------------------------------------------------------------------
     local deposit = vgui.Create("DButton", frame)
-    deposit:SetSize(50, 50)
+    deposit:SetSize(150, 50)
     deposit:SetPos(0, 150)
     deposit:SetText("Deposit")
     deposit:SetTextColor(Color(255, 255, 255))
@@ -44,8 +44,8 @@ function BUSINESS_BANKING:OpenMenu()
     end
 
     local withdraw = vgui.Create("DButton", frame)
-    withdraw:SetSize(50, 50)
-    withdraw:SetPos(50, 150)
+    withdraw:SetSize(150, 50)
+    withdraw:SetPos(150, 150)
     withdraw:SetText("Withdraw")
     withdraw:SetTextColor(Color(255, 255, 255))
     withdraw.Paint = function(self, w, h)
@@ -55,7 +55,18 @@ function BUSINESS_BANKING:OpenMenu()
         BUSINESS_BANKING:Withdraw()
     end
 
-    
+    local sendMoney = vgui.Create("DButton", frame)
+    sendMoney:SetSize(100, 50)
+    sendMoney:SetPos(100, 100)
+    sendMoney:SetText("Send Money")
+    sendMoney:SetTextColor(Color(255, 255, 255))
+    sendMoney.Paint = function(self, w, h)
+        draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 255))
+    end
+    sendMoney.DoClick = function()
+        BUSINESS_BANKING:SendMoney()
+    end
+
 end
 
 
@@ -88,6 +99,52 @@ function BUSINESS_BANKING:Withdraw()
         net.SendToServer()
         wInput:Remove()
     end
+end
+
+function BUSINESS_BANKING:SendMoney()
+    local sendFrame = vgui.Create("DFrame")
+    sendFrame:SetSize(200, 200)
+    sendFrame:Center()
+    sendFrame:SetTitle("Send Money")
+    sendFrame:MakePopup()
+
+    local sPlayerList = vgui.Create("DScrollPanel", sendFrame)
+    sPlayerList:Dock(FILL)
+    
+    for _, ply in pairs(player.GetAll()) do
+        local playerPanel = vgui.Create("DPanel", sPlayerList)
+        playerPanel:Dock(TOP)
+        playerPanel:SetTall(50)
+        playerPanel.Paint = function(self, w, h)
+            draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 0))
+        end
+
+        local playerName = vgui.Create("DLabel", playerPanel)
+        playerName:SetText(ply:Nick())
+        playerName:SetContentAlignment(5)
+        playerName:Dock(FILL)
+
+        local sendButton = vgui.Create("DButton", playerPanel)
+        sendButton:Dock(RIGHT)
+        sendButton:SetText("Send") 
+        sendButton.DoClick = function()
+            local sInput = vgui.Create("DTextEntry")
+            sInput:SetSize(100, 20)
+            sInput:Center()
+            sInput:SetPlaceholderText("Amount")
+            sInput:MakePopup()
+            sInput.OnEnter = function()
+                local amount = sInput:GetValue()
+                net.Start("BUSINESS_BANKING_SEND_MONEY")
+                net.WriteUInt(amount, 32)
+                net.WriteEntity(ply)
+                net.SendToServer()
+                sInput:Remove()
+            end
+        end
+    end
+
+
 end
 
 hook.Add("OnPlayerChat", "BUSINESS_BANKING:OpenMenu", function(ply, text)
