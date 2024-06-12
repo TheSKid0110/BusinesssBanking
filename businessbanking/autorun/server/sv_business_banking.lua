@@ -4,6 +4,7 @@ util.AddNetworkString("BUSINESS_BANKING_GET_BALANCE")
 util.AddNetworkString("BUSINESS_BANKING_SEND_BALANCE")
 util.AddNetworkString("BUSINESS_BANKING_WITHDRAW")
 util.AddNetworkString("BUSINESS_BANKING_DEPOSIT")
+util.AddNetworkString("BUSINESS_BANKING_SEND_MONEY")
 
 net.Receive("BUSINESS_BANKING_GET_BALANCE", function(len, ply)
     local playersBalance = ply:GetPData("BUSINESS_BANKING_BALANCE", 0)
@@ -37,6 +38,21 @@ net.Receive("BUSINESS_BANKING_DEPOSIT", function(len, ply)
         net.Send(ply)
     elseif not ply:canAfford(amount) then
         ply:ChatPrint("You do not have enough money to deposit that amount.")
+    end
+end)
+
+net.Receive("BUSINESS_BANKING_SEND_MONEY", function(len, ply)
+    local amount = net.ReadUInt(32)
+    local target = net.ReadEntity()
+    local playersBalance = ply:GetPData("BUSINESS_BANKING_BALANCE", 0)
+    if tonumber(playersBalance) >= amount then
+        ply:SetPData("BUSINESS_BANKING_BALANCE", playersBalance - amount)
+        target:SetPData("BUSINESS_BANKING_BALANCE", target:GetPData("BUSINESS_BANKING_BALANCE", 0) + amount)
+        net.Start("BUSINESS_BANKING_SEND_BALANCE")
+        net.WriteInt(ply:GetPData("BUSINESS_BANKING_BALANCE", 0), 32)
+        net.Send(ply)
+    elseif tonumber(playersBalance) < amount then
+        ply:ChatPrint("You do not have enough money to send that amount.")
     end
 end)
 
